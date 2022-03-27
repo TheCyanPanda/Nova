@@ -22,9 +22,17 @@ APP_DIR  := $(BUILD)/apps
 TARGET   := NovaServer
 INCLUDE  := -Iinclude/
 SRC      :=                      \
-   $(wildcard src/module1/*.cpp) \
+   $(wildcard src/socket/*.cpp) \
    $(wildcard src/module2/*.cpp) \
    $(wildcard src/*.cpp)         \
+
+# OpenCV - If not found, then check for "opencv.pc" in /usr/local/lib/pkgconfig.
+# ( see https://stackoverflow.com/questions/15320267/package-opencv-was-not-found-in-the-pkg-config-search-path)
+# Then add to .bashrc:
+# PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
+# export PKG_CONFIG_PATH
+CXXFLAGS +=`pkg-config --cflags opencv`
+LDFLAGS +=`pkg-config --libs opencv`
 
 OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 DEPENDENCIES \

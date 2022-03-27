@@ -16,8 +16,9 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
-#include "module1/mod1c1.hpp"
+#ifndef PRACTICAL_SOCKET_H
+#define PRACTICAL_SOCKET_H
+#include "socket/PracticalSocket.hpp"
 #ifdef WIN32
   #include <winsock.h>         // For socket(), connect(), send(), and recv()
   typedef int socklen_t;
@@ -378,3 +379,4 @@ void UDPSocket::leaveGroup(const string &multicastGroup) throw(SocketException) 
     throw SocketException("Multicast group leave failed (setsockopt())", true);
   }
 }
+#endif
