@@ -14,7 +14,7 @@
 #
 
 CXX      := -c++
-CXXFLAGS := -pedantic-errors -Wall -Wextra #-Werror
+CXXFLAGS := -pedantic-errors -Wall -Wextra -pthread #-Werror
 LDFLAGS  := -L/usr/lib -lstdc++ -lm
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
@@ -22,8 +22,8 @@ APP_DIR  := $(BUILD)/apps
 TARGET   := NovaServer
 INCLUDE  := -Iinclude/
 SRC      :=                      \
-   $(wildcard src/socket/*.cpp) \
-   $(wildcard src/module2/*.cpp) \
+   $(wildcard src/Network/*.cpp) \
+   $(wildcard src/Video/*.cpp) \
    $(wildcard src/*.cpp)         \
 
 # OpenCV - If not found, then check for "opencv.pc" in /usr/local/lib/pkgconfig.
