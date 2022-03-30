@@ -1,0 +1,15 @@
+*.o
+*.a
+*.so
+*.pl
+*.6
+*.out
+_obj/
+_cgo_defun.c
+_cgo_export.c
+_cgo_export.h
+_cgo_gotypes.go
+*.cgo1.go
+*.cgo2.c
+example/example
+build/objects/
