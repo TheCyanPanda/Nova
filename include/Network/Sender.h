@@ -2,10 +2,18 @@
 #define SENDER_H
 
 #include <iostream>
-#include <Network/InputBuffer.h>
+#include <chrono>
+#include <vector>
+#include <Video/CameraDevice.h>
 
 class Sender
 {
+
+private:
+   CameraDevice* cap;
+   cv::Mat out_frame;
+   std::vector<int> compression_params;
+
 public:
 
    // Constructor / Destructor
@@ -13,7 +21,7 @@ public:
    ~Sender();
 
    // Functions
-   void sender(const std::string& recv_address);
+   void sender(const std::string& recv_addr, const std::string& port);
 
    // Setters
 

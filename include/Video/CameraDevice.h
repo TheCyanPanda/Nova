@@ -9,7 +9,7 @@
 
 class CameraDevice
 {
-    private:
+private:
     cv::VideoCapture* _cap;
     std::string _cam_addr;
     int _cam_idx;
@@ -19,15 +19,15 @@ class CameraDevice
     int _exposure;
     int _fps;
 
-    protected:
+protected:
 
-    public:
+public:
     // Constructor / Destructor
     CameraDevice(std::string cam_addr);
     ~CameraDevice();
 
     // Functions
-    std::string getAvailParams(); // Return as a string the availible params: brightness, contrast etc
+    std::string getAvailParams(); // Return as a string the available params: brightness, contrast etc
     void setParam(); // brightness, constrast, fps, etc
     //std::bool isOpened() { return this->_cap.isOpened(); }
     cv::Mat getFrame();

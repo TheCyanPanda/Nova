@@ -9,12 +9,12 @@
 
 class VideoWindow
 {
-    private:
+private:
     std::string _window_name;
 
-    protected:
+protected:
 
-    public:
+public:
     // Constructor / Destructor
     VideoWindow(const std::string& window_name);
     ~VideoWindow();
@@ -22,7 +22,6 @@ class VideoWindow
     // Functions
     std::string getWindowName() const { return this->_window_name; }
     
-
 };
 
 #endif

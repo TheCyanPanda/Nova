@@ -12,7 +12,7 @@ int main()
     sender = new Sender();
 
     // UDP stream start
-    sender->sender("192.168.99.12");    // This should be the address of the receiver, TODO: Set via client->TCP
+    sender->sender("127.0.0.1", "39009");    // This should be the address of the receiver, TODO: Set via client->TCP
 
 
 
