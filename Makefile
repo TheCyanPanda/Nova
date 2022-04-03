@@ -1,18 +1,3 @@
-#
-# **************************************************************
-# *                Simple C++ Makefile Template                *
-# *                                                            *
-# * Author: Arash Partow (2003)                                *
-# * URL: http://www.partow.net/programming/makefile/index.html *
-# *                                                            *
-# * Copyright notice:                                          *
-# * Free use of this C++ Makefile template is permitted under  *
-# * the guidelines and in accordance with the the MIT License  *
-# * http://www.opensource.org/licenses/MIT                     *
-# *                                                            *
-# **************************************************************
-#
-
 CXX      := -c++
 CXXFLAGS := -pedantic-errors -Wall -Wextra -pthread #-Werror
 LDFLAGS  := -L/usr/lib -lstdc++ -lm
