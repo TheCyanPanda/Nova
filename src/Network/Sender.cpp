@@ -1,5 +1,6 @@
 #include <Network/Sender.h>
 #include <Video/VideoWindow.h>
+#include <Video/CameraDevice.h>
 #include <iostream>
 #include <chrono>
 #include <map>
@@ -34,7 +35,10 @@ void Sender::sender(const std::string& recv_address_)
 		asio::ip::udp::endpoint recv_endpoint(asio::ip::address::from_string(recv_address_), recv_port);
 
 		// Get video device (webcam)
-		VideoWindow win(0, "cUDP");
+		//VideoWindow win(0, "cUDP");
+		CameraDevice cap("dev/video0");
+		VideoWindow cv_window("Test window");
+		cv::Mat frame;
 
 		std::vector<int> compression_params;
 		compression_params.push_back(cv::IMWRITE_JPEG_QUALITY);
@@ -52,7 +56,7 @@ void Sender::sender(const std::string& recv_address_)
 		{
 			const auto timepoint_before_compression = std::chrono::system_clock::now();
 			// Get payload (frame here)
-			cv::Mat frame = win.getFrame();
+			frame = cap.getFrame();
 			if (frame.empty()) {
 				std::this_thread::sleep_for(std::chrono::seconds(1));
 				continue;
@@ -88,11 +92,13 @@ void Sender::sender(const std::string& recv_address_)
 				if (err)
 				{
 					// TODO: Do something
+					std::cout << "OOps!" << "\n";
 				}
 			}
 
 			// Display the frame
-			
+			cv::imshow(cv_window.getWindowName(), frame);
+
 			// Get time statistics etc
 			
 			// Press  ESC on keyboard to  exit
@@ -107,4 +113,5 @@ void Sender::sender(const std::string& recv_address_)
 	catch (const std::exception& e_) {
 		std::cout << "Something went wrong!" << "\n";
 	}
+
 }
