@@ -20,7 +20,7 @@ Sender::Sender()
 // Destructor
 Sender::~Sender()
 {
-
+	delete this->cap;
 }
 
 // Functions
