@@ -19,7 +19,7 @@ UDPSocket::~UDPSocket()
 }
 
 
-void UDPSocket::sendBuffer(const std::vector<unsigned char> buf, unsigned char* buffer, const size_t buffer_sz)
+void UDPSocket::sendBuffer(const std::vector<unsigned char> buf, const size_t buffer_sz, unsigned char* cpy_buffer)
 {
     for (auto it = buf.begin(); it < buf.end(); it += buffer_sz)
     {
@@ -27,8 +27,9 @@ void UDPSocket::sendBuffer(const std::vector<unsigned char> buf, unsigned char* 
         if (end >= buf.end()) {
             end = buf.end();
         }
-        std::copy(it, end, buffer);
+        if (cpy_buffer != nullptr)
+            std::copy(it, end, cpy_buffer);
         this->socket->send_to(asio::buffer(std::string(it, end)),
-        (const asio::ip::basic_endpoint<asio::ip::udp> &)*this->endpoints.begin());
+            (const asio::ip::basic_endpoint<asio::ip::udp> &)*this->endpoints.begin());
     }
 }

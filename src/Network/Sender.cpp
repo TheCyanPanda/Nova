@@ -29,8 +29,10 @@ Sender::~Sender()
 // TODO: Split this function into separate functions and classes!!
 void Sender::sender()
 {
-
+	// Create a buffer to hold the encoded image fragments
 	std::vector<unsigned char> buf(this->chunk_sz);
+
+	// Main loop
     while (1)
     {
 
@@ -43,7 +45,7 @@ void Sender::sender()
         std::vector<uchar> buf;
         cv::imencode(".jpg", this->out_frame, buf, std::vector<int>());
 
-		this->udp_socket->sendBuffer(buf, this->image_buffer, this->chunk_sz);
+		this->udp_socket->sendBuffer(buf, this->chunk_sz);
 	
         std::this_thread::sleep_for(std::chrono::milliseconds(30));
     }

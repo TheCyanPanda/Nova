@@ -25,7 +25,7 @@ public:
     UDPSocket(const std::string& recv_addr_, const std::string& port_);
     ~UDPSocket();
 
-    void sendBuffer(const std::vector<unsigned char> buf, unsigned char* buffer, const size_t buffer_sz);
+    void sendBuffer(const std::vector<unsigned char> buf, const size_t buffer_sz, unsigned char* cpy_buffer=nullptr);
 
 };
 
