@@ -1,10 +1,15 @@
 g++
--std=c++11
+#-lc++
+-lstdc++
+-std=c++17
 -pedantic-errors
 -Wall
 -Wextra
 -pthread
--lc++
+pkg-config --cflags opencv
+pkg-config --libs opencv
+
+-I/usr/local/include/opencv4
 -L/usr/lib -lstdc++ -lm
 -Iinclude/
 -I/usr/local/lib
