@@ -22,7 +22,7 @@ int main()
     /* Define the TCP server specific callbacks here. TODO: Define these in a separate class */
 
     // Callback for when a new user connects
-    server.onJoin = [](Network::TCPConnection::pointer client)
+    server.onJoin = [&](Network::TCPConnection::pointer client)
     {
         std::cout << "User { " << client->getUsername() << " } has joined the server" << "\n";
     };
@@ -34,13 +34,17 @@ int main()
     };
 
     // Callback to happen when client sends a message
-    server.onClientMessage = [&server](const std::string& message)
+    server.onClientMessage = [&server](const std::string& message, Network::TCPConnection::pointer client)
     {
         // Parse message
 
         // Send response to all connected clients
-        server.broadcast(message);
+        std::stringstream ss;
+        ss << client->getUserId() << " : " << client->getUsername() << " Sent message: " << message;
+        server.broadcast(ss.str());
 
+        // Send message back to client
+        client->sendMessage("You sent me a message\n");
     };
 
     server.run();

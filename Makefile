@@ -8,7 +8,8 @@ TARGET   := NovaServer
 INCLUDE  := -Iinclude/
 SRC      :=                      \
    $(wildcard src/Network/*.cpp) \
-   $(wildcard src/Video/*.cpp) \
+   $(wildcard src/Video/*.cpp)   \
+   $(wildcard src/Common/*.cpp)  \
    $(wildcard src/*.cpp)         \
 
 # OpenCV - If not found, then check for "opencv.pc" in /usr/local/lib/pkgconfig.

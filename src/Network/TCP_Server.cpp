@@ -1,3 +1,4 @@
+#include "Common/Common.hpp"
 #include <Network/TCP_Server.h>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/read_until.hpp>
@@ -52,6 +53,8 @@ namespace Network
             this->_errorHandler();
             return;
         }
+        
+        // TODO: Log bytesTransferred
 
         std::stringstream message;
         message << this->_username << ": " << std::istream(&this->_incomingMessages).rdbuf();
@@ -84,6 +87,9 @@ namespace Network
 
         // Remove TX message at front of the queue
         this->_outgoingMessages.pop();
+
+        // TODO: Log bytesTransferred
+
         // Repeat this process if there are more messages in the queue:
         if (!this->_outgoingMessages.empty()) {
             this->asyncWrite();
@@ -110,7 +116,6 @@ namespace Network
         : _ipVersion(ipv), _port(port), _acceptor(_ioContext, tcp::endpoint(ipv == IPV::V4 ? tcp::v4() : tcp::v6(), port))
 
     {
-
     }
 
 
@@ -121,21 +126,17 @@ namespace Network
     }
 
 
-    // Public functions
-    int TCPServer::run()
-    {
-        try
-        {
-            this->startAccept();
-            this->_ioContext.run(); // blocking method
-        } catch (std::exception& e) {
-            std::cerr << e.what() << "\n";
-        }
-
-        return 0;
-    }
-
                                     // --- Private functions --- //
+
+    const std::string TCPServer::generateUniqueUserId(const uint8_t len)
+    {
+        std::string user_id;
+        do {
+            user_id = Common::generateString(len);
+        } while (this->hasClient(user_id));
+
+        return user_id;
+    }
 
     void TCPServer::startAccept()
     {
@@ -143,11 +144,19 @@ namespace Network
 
         // Accept connection async
         // Dummy socket waits for a connection. When a client connects, move to active connection part.
+        // TODO: Refuse connection if number of active connections are at limit
         this->_acceptor.async_accept(*this->_socket, [this](const boost::system::error_code& ec)
         {
             // Create the connection and add to our list of active connections
             auto connection = TCPConnection::create(std::move(*this->_socket));
             this->_activeConnections.insert(connection);
+
+            // Give the connection a uniqe user idx.
+            std::string user_id = this->generateUniqueUserId();
+            connection->setUserId(user_id);
+
+            // Link unique userId to map
+            this->_activeConnectionsMap.insert(std::make_pair(connection->getUserId(), connection));
 
             if (this->onJoin) {
                 this->onJoin(connection);
@@ -157,10 +166,10 @@ namespace Network
             if (!ec) {
                 connection->start(
                     /* Message handler */
-                    [this](const std::string& message)
+                    [this, connection](const std::string& message)
                     {
                         if (this->onClientMessage) {
-                            this->onClientMessage(message);
+                            this->onClientMessage(message, connection);
                         }
                     },
                     /* Error handler */
@@ -168,7 +177,9 @@ namespace Network
                     {
                         // Check connection is still valid and connection object is in our list of active connections
                         if (auto shared = weak.lock(); shared&& this->_activeConnections.erase(shared)) {
-                            if (this->onLeave) {
+                            if (this->onLeave)
+                            {
+                                this->_activeConnectionsMap.erase(shared->getUserId());
                                 this->onLeave(shared);
                             }
                         }
@@ -182,6 +193,19 @@ namespace Network
 
                                     // --- Public functions --- //
 
+    int TCPServer::run()
+    {
+        try
+        {
+            this->startAccept();
+            this->_ioContext.run();
+        } catch (std::exception& e) {
+            std::cerr << e.what() << "\n";
+        }
+
+        return 0;
+    }
+
     // Broadcast message to all connected clients
     void TCPServer::broadcast(const std::string &message)
     {
@@ -190,14 +214,29 @@ namespace Network
         }
     }
 
-    void TCPServer::sendToClient(const std::string& message, TCPConnection& client_connection)
+    int TCPServer::sendToClient(const std::string& client_id, const std::string& message)
     {
-        for (auto& connection: this->_activeConnections) {
-            if (std::strcmp(connection->getUsername().c_str(), connection->getUsername().c_str()) == 0) {
-                connection->sendMessage(message);
-                break;
-            }
-        }
+        if (this->getActiveClients() == 0 || !(this->hasClient(client_id)))
+            return -1;
+
+        this->getClient(client_id)->sendMessage(message);
+        return 0;
+    }
+
+    bool TCPServer::hasClient(const std::string& clientId)
+    {
+        if (this->_activeConnectionsMap.count(clientId) > 0)
+            return true;
+
+        return false;
+    }
+
+    const TCPConnection::pointer TCPServer::getClient(const std::string& clientId)
+    {
+        if (!(this->hasClient(clientId)))
+            return nullptr;
+
+        return this->_activeConnectionsMap[clientId];
     }
 
 }

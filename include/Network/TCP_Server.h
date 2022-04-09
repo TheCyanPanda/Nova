@@ -1,6 +1,7 @@
 #ifndef TCP_SERVER_H
 #define TCP_SERVER_H
 
+#include <Common/Common.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <string>
@@ -10,6 +11,7 @@
 #include <queue>
 #include <limits>
 #include <functional>
+#include <map>
 
 
 using namespace boost;
@@ -33,6 +35,7 @@ namespace Network
         std::string _username;
         messageHandler _messageHandler;
         errorHandler _errorHandler;
+        std::string _userId;
 
         // Constructor
         explicit TCPConnection(tcp::socket&& socket);
@@ -56,6 +59,9 @@ namespace Network
         tcp::socket& getSocket() { return this->_socket; };
 
         inline const std::string& getUsername() const {return this->_username;}
+        inline const std::string getUserId() const {return this->_userId;}
+        inline void setUserId(const std::string& idx) {this->_userId = idx;}
+
 
     };
 
@@ -64,7 +70,7 @@ namespace Network
         // Functions to be declared by instantiator of this class, i.e, callbacks for events.
         using onJoinHandler = std::function<void(TCPConnection::pointer)>; // Trigger handler when someone connects
         using onLeaveHandler = std::function<void(TCPConnection::pointer)>; // Trigger when user disconnects
-        using onClientMessageHandler = std::function<void(std::string)>; // Trigger when a client sends message
+        using onClientMessageHandler = std::function<void(std::string, Network::TCPConnection::pointer client)>; // Trigger when a client sends message
 
     private:
         IPV _ipVersion;
@@ -73,8 +79,11 @@ namespace Network
         tcp::acceptor _acceptor;
         std::optional<tcp::socket> _socket; // c++17
         std::unordered_set<TCPConnection::pointer> _activeConnections {};
+        std::map<std::string, TCPConnection::pointer> _activeConnectionsMap; // Used to locate specific connections
 
+        const TCPConnection::pointer getClient(const std::string& clientId);
         void startAccept();
+        const std::string generateUniqueUserId(const uint8_t len=25);
 
     public:
         onJoinHandler onJoin;
@@ -86,7 +95,10 @@ namespace Network
 
         int run();
         void broadcast(const std::string& message); // Send message to ALL connected clients
-        void sendToClient(const std::string& message, TCPConnection& client_connection); // Send message to one client
+        int sendToClient(const std::string& client_id, const std::string& message); // Send message to one client
+
+        inline size_t getActiveClients() const { return this->_activeConnections.size(); }
+        bool hasClient(const std::string& clientId);
 
     };
 
