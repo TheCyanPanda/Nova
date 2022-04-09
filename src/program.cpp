@@ -15,10 +15,26 @@ int main()
 
     delete sender;
 #endif
+    // Test TCP Server
+    Network::TCPServer server(Network::IPV::V4, 1234);
 
-    Network::TCPServer Server(Network::IPV::V4, 1234);
 
-    Server.run();
+    /* Define the TCP server specific callbacks here. TODO: Define these in a separate class */
+    server.onJoin = [](Network::TCPConnection::pointer server)
+    {
+        std::cout << "User { " << server->getUsername() << " } has joined the server" << "\n";
+    };
+    server.onLeave = [](Network::TCPConnection::pointer server)
+    {
+
+    };
+
+    server.onClientMessage = [](const std::string& message)
+    {
+
+    };
+
+    server.run();
 
     return 0;
 }

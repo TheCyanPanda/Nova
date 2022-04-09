@@ -29,7 +29,5 @@ public:
 
 };
 
-   
-   
 
 #endif /* UDP_SOCKET_H */
