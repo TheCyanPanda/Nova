@@ -20,17 +20,26 @@ int main()
 
 
     /* Define the TCP server specific callbacks here. TODO: Define these in a separate class */
-    server.onJoin = [](Network::TCPConnection::pointer server)
-    {
-        std::cout << "User { " << server->getUsername() << " } has joined the server" << "\n";
-    };
-    server.onLeave = [](Network::TCPConnection::pointer server)
-    {
 
+    // Callback for when a new user connects
+    server.onJoin = [](Network::TCPConnection::pointer client)
+    {
+        std::cout << "User { " << client->getUsername() << " } has joined the server" << "\n";
     };
 
-    server.onClientMessage = [](const std::string& message)
+    // Callback for when a user disconnects
+    server.onLeave = [](Network::TCPConnection::pointer client)
     {
+        std::cout << "User { " << client->getUsername() << " } has left the server" << "\n";
+    };
+
+    // Callback to happen when client sends a message
+    server.onClientMessage = [&server](const std::string& message)
+    {
+        // Parse message
+
+        // Send response to all connected clients
+        server.broadcast(message);
 
     };
 

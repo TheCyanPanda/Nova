@@ -16,6 +16,8 @@ using namespace boost;
 namespace Network
 {
     using asio::ip::tcp;
+    using messageHandler = std::function<void(std::string)>;
+    using errorHandler = std::function<void()>;
 
     enum class IPV
     {
@@ -29,7 +31,10 @@ namespace Network
     private:
         tcp::socket _socket;
         std::string _username;
+        messageHandler _messageHandler;
+        errorHandler _errorHandler;
 
+        // Constructor
         explicit TCPConnection(tcp::socket&& socket);
 
         // Queue written to when we write a message
@@ -46,7 +51,7 @@ namespace Network
     public:
         using pointer = std::shared_ptr<TCPConnection>;
         static pointer create(tcp::socket&& socket) { return pointer(new TCPConnection(std::move(socket))); }
-        void start();
+        void start(messageHandler&& message_handler, errorHandler&& error_handler);
         void sendMessage(const std::string& message); // Post
         tcp::socket& getSocket() { return this->_socket; };
 
@@ -56,9 +61,10 @@ namespace Network
 
     class TCPServer
     {
+        // Functions to be declared by instantiator of this class, i.e, callbacks for events.
         using onJoinHandler = std::function<void(TCPConnection::pointer)>; // Trigger handler when someone connects
         using onLeaveHandler = std::function<void(TCPConnection::pointer)>; // Trigger when user disconnects
-        using OnClientMessageHandler = std::function<void(std::string)>; // Trigger when a client sends message
+        using onClientMessageHandler = std::function<void(std::string)>; // Trigger when a client sends message
 
     private:
         IPV _ipVersion;
@@ -73,13 +79,14 @@ namespace Network
     public:
         onJoinHandler onJoin;
         onLeaveHandler onLeave;
-        OnClientMessageHandler onClientMessage;
+        onClientMessageHandler onClientMessage;
 
         TCPServer(IPV ipv, int port);
         ~TCPServer();
 
         int run();
         void broadcast(const std::string& message); // Send message to ALL connected clients
+        void sendToClient(const std::string& message, TCPConnection& client_connection); // Send message to one client
 
     };
 

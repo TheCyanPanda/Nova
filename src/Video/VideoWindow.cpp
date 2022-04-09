@@ -18,8 +18,8 @@ VideoWindow::~VideoWindow()
    try
    {
       cv::destroyWindow(this->_window_name);
-   } 
-   
+   }
+
    catch (const std::exception& e_)
    {
 

@@ -3,6 +3,7 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/system/error_code.hpp>
 #include <iostream>
 
@@ -23,8 +24,11 @@ namespace Network
 
                                 // --- Private functions --- //
 
-    void TCPConnection::start( /* callbacks as args */)
+    void TCPConnection::start(messageHandler&& message_handler, errorHandler&& error_handler)
     {
+        this->_messageHandler = std::move(message_handler);
+        this->_errorHandler = std::move(error_handler);
+
         this->asyncRead();
     }
 
@@ -44,18 +48,17 @@ namespace Network
         if (ec)
         {
             this->_socket.close(ec); // TODO: check (if (ec)) if there was an error upon closing socket
-            // TODO: Add an error handler
+            // Handle error
+            this->_errorHandler();
             return;
         }
 
-        // TODO: Pop this message out to whetever process is needed. For now, just print out.
         std::stringstream message;
         message << this->_username << ": " << std::istream(&this->_incomingMessages).rdbuf();
         // No need to run .consume on the streambuffer (_incomingMessages) since this is done by .rdbuf()
 
-        std::cout << message.str();
-        // TODO: Add message handler
-
+        // Send message to messageHandler
+        this->_messageHandler(message.str());
         // Repeat this process to handle the next RX message in the buffer:
         this->asyncRead();
     }
@@ -74,7 +77,8 @@ namespace Network
         if (ec)
         {
             this->_socket.close(ec); // TODO: check (if (ec)) if there was an error upon closing socket
-            // TODO: Add an error handler
+            // Handle error
+            this->_errorHandler();
             return;
         }
 
@@ -149,8 +153,27 @@ namespace Network
                 this->onJoin(connection);
             }
 
+            // Start up the connection and pass in our message- and error handler
             if (!ec) {
-                connection->start();
+                connection->start(
+                    /* Message handler */
+                    [this](const std::string& message)
+                    {
+                        if (this->onClientMessage) {
+                            this->onClientMessage(message);
+                        }
+                    },
+                    /* Error handler */
+                    [&, weak = std::weak_ptr(connection)]()
+                    {
+                        // Check connection is still valid and connection object is in our list of active connections
+                        if (auto shared = weak.lock(); shared&& this->_activeConnections.erase(shared)) {
+                            if (this->onLeave) {
+                                this->onLeave(shared);
+                            }
+                        }
+                    }
+                    );
             }
 
             this->startAccept();
@@ -159,10 +182,21 @@ namespace Network
 
                                     // --- Public functions --- //
 
+    // Broadcast message to all connected clients
     void TCPServer::broadcast(const std::string &message)
     {
         for (auto& connection: this->_activeConnections) {
             connection->sendMessage(message);
+        }
+    }
+
+    void TCPServer::sendToClient(const std::string& message, TCPConnection& client_connection)
+    {
+        for (auto& connection: this->_activeConnections) {
+            if (std::strcmp(connection->getUsername().c_str(), connection->getUsername().c_str()) == 0) {
+                connection->sendMessage(message);
+                break;
+            }
         }
     }
 
