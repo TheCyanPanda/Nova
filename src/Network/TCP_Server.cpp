@@ -53,7 +53,7 @@ namespace Network
             this->_errorHandler();
             return;
         }
-        
+
         // TODO: Log bytesTransferred
 
         std::stringstream message;
@@ -98,7 +98,7 @@ namespace Network
     }
 
                                 // --- Public functions --- //
-    // Post
+
     void TCPConnection::sendMessage(const std::string &message)
     {
         bool queue_idle = this->_outgoingMessages.empty();

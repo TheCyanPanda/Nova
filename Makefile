@@ -1,5 +1,5 @@
 CXX      := -c++
-CXXFLAGS := -pedantic-errors -Wall -Wextra -pthread -std=c++17 #-Werror
+CXXFLAGS := -pedantic-errors -Wall -Wextra -pthread -std=c++17 -lpigpio -lrt#-Werror
 LDFLAGS  := -L/usr/lib -lstdc++ -lm
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
@@ -17,7 +17,7 @@ SRC      :=                      \
 # Then add to .bashrc:
 # PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/usr/local/lib/pkgconfig
 # export PKG_CONFIG_PATH
-CXXFLAGS +=`pkg-config --cflags opencv`
+CXXFLAGS +=`pkg-config --cflags opencv `
 LDFLAGS +=`pkg-config --libs opencv`
 
 OBJECTS  := $(SRC:%.cpp=$(OBJ_DIR)/%.o)

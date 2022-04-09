@@ -1,6 +1,9 @@
+#include "opencv2/core.hpp"
 #include <Network/Sender.h>
 #include <program.hpp>
 #include <Network/TCP_Server.h>
+#include <boost/algorithm/string.hpp>
+#include <pigpio.h>
 
 int main()
 {
@@ -45,6 +48,10 @@ int main()
 
         // Send message back to client
         client->sendMessage("You sent me a message\n");
+        if (algorithm::contains(ss.str(), "\\q")){
+            std::cout << "hey !" << "\n";
+            client->disconnect();
+        }
     };
 
     server.run();

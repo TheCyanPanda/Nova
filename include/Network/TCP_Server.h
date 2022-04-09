@@ -43,7 +43,7 @@ namespace Network
         // Queue written to when we write a message
         std::queue<std::string> _outgoingMessages; // queue - TODO: Rename this to e.g. TXQueue, TXBuffer etc;.
         // Streambuffer for incoming messages: _streamBuf
-        asio::streambuf _incomingMessages {63553}; // TODO: Initialize this with given size in constructor with std::numeric_limits<uint16_t>::max() : TODO: Rename this to something more appropriate like e.g. rxBuffer etc
+        asio::streambuf _incomingMessages {std::numeric_limits<uint16_t>::max()}; // TODO: Initialize this with given size in constructor with std::numeric_limits<uint16_t>::max() : TODO: Rename this to something more appropriate like e.g. rxBuffer etc
 
         void asyncRead();
         void onRead(system::error_code ec, size_t bytesTransferred);
@@ -55,12 +55,13 @@ namespace Network
         using pointer = std::shared_ptr<TCPConnection>;
         static pointer create(tcp::socket&& socket) { return pointer(new TCPConnection(std::move(socket))); }
         void start(messageHandler&& message_handler, errorHandler&& error_handler);
-        void sendMessage(const std::string& message); // Post
+        void sendMessage(const std::string& message);
         tcp::socket& getSocket() { return this->_socket; };
 
         inline const std::string& getUsername() const {return this->_username;}
         inline const std::string getUserId() const {return this->_userId;}
         inline void setUserId(const std::string& idx) {this->_userId = idx;}
+        inline void disconnect() {this->_socket.close();}
 
 
     };
