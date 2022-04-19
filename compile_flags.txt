@@ -8,6 +8,7 @@ g++
 #-pthread
 pkg-config --cflags opencv
 pkg-config --libs opencv
+-lboost_random
 
 -I/usr/local/include/opencv4
 -L/usr/lib -lstdc++ -lm
@@ -17,3 +18,4 @@ pkg-config --libs opencv
 -I/usr/include/c++/10
 -I/usr/include/arm-linux-gnueabihf/c++/10
 -L/usr/local/lib/arm-linux-gnueabihf
+-L/usr/lib/arm-linux-gnueabihf

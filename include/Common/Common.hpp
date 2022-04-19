@@ -3,7 +3,8 @@
 
 #include <string>
 #include <iostream>
-#include <cstdlib>
+#include <boost/random/uniform_int_distribution.hpp>
+#include <random>
 
 namespace Common
 {

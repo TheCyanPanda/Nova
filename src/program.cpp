@@ -3,7 +3,7 @@
 #include <program.hpp>
 #include <Network/TCP_Server.h>
 #include <boost/algorithm/string.hpp>
-#include <pigpio.h>
+#include <GPIO/gpio.h>
 
 int main()
 {
@@ -18,6 +18,7 @@ int main()
 
     delete sender;
 #endif
+#if 0
     // Test TCP Server
     Network::TCPServer server(Network::IPV::V4, 1234);
 
@@ -55,6 +56,11 @@ int main()
     };
 
     server.run();
+#endif
+
+    // Servo test
+    IO::testServo tServo(16);
+    //std::cout << "ret: " << ret << "\n";
 
     return 0;
 }

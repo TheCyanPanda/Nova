@@ -1,6 +1,6 @@
 CXX      := -c++
-CXXFLAGS := -pedantic-errors -Wall -Wextra -pthread -std=c++17 -lpigpio -lrt#-Werror
-LDFLAGS  := -L/usr/lib -lstdc++ -lm
+CXXFLAGS := -pedantic-errors -Wall -Wextra -pthread -std=c++17 -lrt -lboost_random #-Werror
+LDFLAGS  := -L/usr/lib -lstdc++ -lm -lcppgpio
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
@@ -10,6 +10,7 @@ SRC      :=                      \
    $(wildcard src/Network/*.cpp) \
    $(wildcard src/Video/*.cpp)   \
    $(wildcard src/Common/*.cpp)  \
+   $(wildcard src/GPIO/*.cpp)  \
    $(wildcard src/*.cpp)         \
 
 # OpenCV - If not found, then check for "opencv.pc" in /usr/local/lib/pkgconfig.
