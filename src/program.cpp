@@ -59,7 +59,7 @@ int main()
 #endif
 
     // Servo test
-    IO::testServo tServo(16);
+    GPIO::testServo tServo(18);
     //std::cout << "ret: " << ret << "\n";
 
     return 0;

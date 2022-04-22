@@ -1,11 +1,11 @@
 CXX      := -c++
 CXXFLAGS := -pedantic-errors -Wall -Wextra -pthread -std=c++17 -lrt -lboost_random #-Werror
-LDFLAGS  := -L/usr/lib -lstdc++ -lm -lcppgpio
+LDFLAGS  := -L/usr/lib -lstdc++ -lm -lbcm2835
 BUILD    := ./build
 OBJ_DIR  := $(BUILD)/objects
 APP_DIR  := $(BUILD)/apps
 TARGET   := NovaServer
-INCLUDE  := -Iinclude/
+INCLUDE  := -Iinclude/ -I/usr/local/include/
 SRC      :=                      \
    $(wildcard src/Network/*.cpp) \
    $(wildcard src/Video/*.cpp)   \
