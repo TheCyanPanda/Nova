@@ -1,4 +1,5 @@
 #include <GPIO/gpio.h>
+#include <bcm2835.h>
 #include <cmath>
 #include <ratio>
 #include <thread>
@@ -6,7 +7,7 @@
 
 namespace GPIO
 {
-
+    /* ------------------------------------ PWMInterface  ------------------------------------*/
     // Constructor
     PWMInterface::PWMInterface(int pin, int max_pulse, int min_pulse, int pulse_time)
         : _pin(pin), _minPulse(min_pulse), _maxPulse(max_pulse), _pulseTime(pulse_time)
@@ -25,36 +26,14 @@ namespace GPIO
         // Todo; disable the port ? bcm2835_gpio_fsel(this->_pin, ---);  // Set GPIO pin as output
     }
 
-    void PWMInterface::move(const int angle)
+    void PWMInterface::move(const int value)
     {
-        this->_dutyCycle = angle;
+        if (value < this->_minPulse || value > this->_maxPulse)
+            throw GPIOException("Error: pulse value not in valid range");
+        std::cout << "Moving to: " << value << "\n"; //todo: Store in log
+        this->_dutyCycle = value;
         this->_angle = 0;
         this->_setPwm(20);
-    }
-
-    void PWMInterface::moveMax()
-    {
-        //int pulse = pulse; // Todo; find the max pulse value
-        this->_dutyCycle = this->_maxPulse;
-        this->_angle = 0;
-        this->_setPwm(30);
-    }
-
-    void PWMInterface::moveMin()
-    {
-        //int pulse = pulse; // Todo; find the max pulse value
-        this->_dutyCycle = this->_minPulse;
-        this->_angle = 0;
-        this->_setPwm(30);
-    }
-
-    void PWMInterface::moveMid()
-    {
-        //int pulse = pulse; // Todo; find the max pulse value
-
-        this->_dutyCycle = this->_minPulse + (this->_maxPulse - this->_minPulse) / 2;
-        this->_angle = 0;
-        this->_setPwm(30);
     }
 
     void PWMInterface::_setPwm(const int pulse)
@@ -66,46 +45,47 @@ namespace GPIO
             bcm2835_gpio_clr(this->_pin);   //Set low
             bcm2835_delayMicroseconds(this->_pulseTime - this->_dutyCycle); //each pulse is 20ms
         }
-        std::cout << "duty cycle: " << this->_dutyCycle << " pulse: " << pulse << "\n";
     }
 
-    testServo::testServo(int gpio_pin)
+    ServoInterface::ServoInterface(int gpio_pin)
         : PWMInterface(gpio_pin, 900, 2000, 20000)
     {
-        this->test();
     }
 
-    int testServo::test()
-    {   
-        this->moveMid();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    void ServoInterface::moveMax()
+    {
+        this->_dutyCycle = this->_maxPulse;
+        this->_angle = 0;
+        this->_setPwm(30);
+    }
 
-        this->moveMin();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    void ServoInterface::moveMin()
+    {
+        this->_dutyCycle = this->_minPulse;
+        this->_angle = 0;
+        this->_setPwm(30);
+    }
 
-        this->moveMax();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    void ServoInterface::moveMid()
+    {
+        this->_dutyCycle = this->_minPulse + (this->_maxPulse - this->_minPulse) / 2;
+        this->_angle = 0;
+        this->_setPwm(30);
+    }
 
-        this->moveMid();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    int ServoInterface::test()
+    {
+        for (int i = 0 ; i < 3; i++) {
+            this->moveMid();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-        this->moveMin();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            this->moveMin();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
-        this->moveMax();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-        this->moveMid();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-        this->moveMin();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
-        this->moveMax();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-
+            this->moveMax();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
         return 0;
     }
-
 
 }

@@ -21,7 +21,7 @@ public:
 
     // Functions
     std::string getWindowName() const { return this->_window_name; }
-    
+
 };
 
 #endif

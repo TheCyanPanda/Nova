@@ -11,6 +11,7 @@ SRC      :=                      \
    $(wildcard src/Video/*.cpp)   \
    $(wildcard src/Common/*.cpp)  \
    $(wildcard src/GPIO/*.cpp)  \
+   $(wildcard src/IOHandler/*.cpp)  \
    $(wildcard src/*.cpp)         \
 
 # OpenCV - If not found, then check for "opencv.pc" in /usr/local/lib/pkgconfig.

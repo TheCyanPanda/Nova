@@ -9,6 +9,7 @@ g++
 pkg-config --cflags opencv
 pkg-config --libs opencv
 -lboost_random
+-lbcm2835
 
 -I/usr/local/include/opencv4
 -L/usr/lib -lstdc++ -lm

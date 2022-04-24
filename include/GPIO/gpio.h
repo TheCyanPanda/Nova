@@ -34,7 +34,6 @@ namespace GPIO
     {
         // Builds on the BCM2835 C library, see https://www.airspayce.com/mikem/bcm2835
     private:
-        void _setPwm(const int pulse);
 
     protected:
         int _pin;            // Pin number
@@ -44,11 +43,9 @@ namespace GPIO
         int _angle;          // Last set value
         int _pulseTime;      // pulse time in microseconds
         volatile bool _enable;      // enable/disabled
+        void _setPwm(const int pulse);
 
-        void move(const int angle);
-        void moveMax();
-        void moveMin();
-        void moveMid();
+        void move(const int value);
 
     public:
         PWMInterface(int pin, int max_pulse, int min_puls, int pulse_time = 2000);
@@ -58,14 +55,18 @@ namespace GPIO
 
     };
 
-    class testServo
+    class ServoInterface
         : public PWMInterface
     {
     private:
 
     public:
-        testServo(int gpio_pin);
+        ServoInterface(int gpio_pin);
         int test();
+        void moveMax();
+        void moveMin();
+        void moveMid();
+
     };
 
 }
