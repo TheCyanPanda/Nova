@@ -10,7 +10,7 @@ namespace Common
 {
 
     std::string generateString(const size_t len);
-
+    const std::vector<std::string> stringSplit(const std::string& msg, const std::string& delimiter);
 }
 
 

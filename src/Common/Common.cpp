@@ -27,4 +27,20 @@ namespace Common
 
         return temp_string;
     }
+
+    const std::vector<std::string> stringSplit(const std::string& msg, const std::string& delimiter)
+    {
+        size_t ps = 0;
+        size_t pe, dl = delimiter.length();
+        std::string token;
+        std::vector<std::string> res;
+
+        while ((pe = msg.find(delimiter, ps)) != std::string::npos) { // Iterate over the whole string until end
+            token = msg.substr(ps, pe -ps); // Grab the next substring delimited by 'delimiter'
+            ps = pe + dl;
+            res.push_back(token);
+        }
+        res.push_back(msg.substr(ps));
+        return res;
+    }
 }
