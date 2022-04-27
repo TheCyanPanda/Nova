@@ -10,19 +10,17 @@ class ioHandler
 {
 private:
     enum class Commands {CAMERA_MOVE};
-    enum class CameraCommands {LEFT, MID, RIGHT};
 
     Network::CameraStream* cameraStream;
     Network::TCPServer* tcpServer;
     GPIO::ServoInterface* cameraServo;
 
-    const std::string commandDelimiter = "::";
-    std::map<Commands, std::string> validCommands;
-    std::map<std::string, CameraCommands> camServoCommands;
+    std::map<std::string, std::function<void(const std::string&)>> functionMap;
+    void fnMoveCamera(const std::string& v_cmd) const;
 
     void initTcpServerCallbacks();
     void initValidCommands();
-    int parseTcpMessage(const std::string& msg);
+    int parseTcpMessage(const std::string& msg, const std::string& username);
     void startTcpServer();
     void startUdpServer();
 

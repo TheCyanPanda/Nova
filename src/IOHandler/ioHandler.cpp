@@ -3,6 +3,8 @@
 #include "Network/TCP_Server.h"
 #include <IOHandler/ioHandler.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 // Constructor
 ioHandler::ioHandler()
@@ -50,7 +52,7 @@ void ioHandler::initTcpServerCallbacks()
     this->tcpServer->onClientMessage = [this](const std::string& message, Network::TCPConnection::pointer client)
     {
         // Parse message
-        int ret = this->parseTcpMessage(message);
+        int ret = this->parseTcpMessage(message, client->getUsername());
         if (ret) {
             std::cout << "Error..." << "\n"; // todo: fix.
         }
@@ -72,46 +74,65 @@ void ioHandler::initTcpServerCallbacks()
 
 void ioHandler::initValidCommands()
 {
-    // cam_set: <mid/left/right>
-    this->validCommands.insert(std::make_pair(Commands::CAMERA_MOVE, "cam_move"));
-    this->camServoCommands.insert(std::make_pair("left", CameraCommands::LEFT));
-    this->camServoCommands.insert(std::make_pair("mid", CameraCommands::MID));
-    this->camServoCommands.insert(std::make_pair("right", CameraCommands::RIGHT));
-
+    this->functionMap["cam_move"] = [this](const std::string& v_cmd) {
+        // TODO: Log entry etc
+        this->fnMoveCamera(v_cmd);
+    };
 
 }
 
-int ioHandler::parseTcpMessage(const std::string& msg)
-{
-    std::vector<std::string> res = Common::stringSplit(msg, ": ");
 
-    for (auto i : res) {
-        if (algorithm::contains(i, this->validCommands[Commands::CAMERA_MOVE]))
-        {
-            std::cout << i << "\n";
-            size_t sub_c_idx = i.find(this->commandDelimiter);
-            if (sub_c_idx != std::string::npos) { // TODO: Make this work
-                std::string command =  i.substr(sub_c_idx + this->commandDelimiter.length(), i.length() - sub_c_idx);
-                CameraCommands token = this->camServoCommands[command];
-                switch (token)
-                {
-                    case CameraCommands::LEFT:
-                        std::cout << "vEnster!" << "\n";
-                        break;
-                    case CameraCommands::MID:
-                        std::cout << "mitten!" << "\n";
-                        break;
-                    case CameraCommands::RIGHT:
-                        std::cout << "hoeger" << "\n";
-                        break;
-                    default:
-                        std::cout << "Invalid command" << "\n";
-                }
-            }
-        }
+void ioHandler::fnMoveCamera(const std::string& v_cmd) const
+{
+    
+    std::vector argv = Common::stringSplit(v_cmd, " ");
+    enum position {MID_POS, MIN_POS, MAX_POS};
+    static std::map<std::string, position> string_map;
+    string_map["mid"] = MID_POS;
+    string_map["min"] = MIN_POS;
+    string_map["max"] = MAX_POS;
+
+    switch(string_map[argv.at(1).c_str()]) { // TODO: Find a way to make this work.
+        case MID_POS:
+            std::cout << "moving camera to mid" << "\n";
+            break;
+        case MIN_POS:
+            std::cout << "moving camera to MIN" << "\n";
+            break;
+        case MAX_POS:
+            std::cout << "moving camera to MAX" << "\n";
+            break;
+        default:
+            std::cout << "WARNING: Invalid option..." << "\n";
+    }
+    this->cameraServo->moveMid();
+
+}
+
+int ioHandler::parseTcpMessage(const std::string& msg, const std::string& username)
+{
+    std::vector<std::string> res = Common::stringSplit(msg, " ");
+
+    // Validate sender as actual client and pop it from vector
+    if (algorithm::contains(res.front(), username)) {
+        res.erase(res.begin());
+        res.back() = boost::algorithm::erase_tail_copy(res.back(), 1); // Remove trailing new-line char from last element
+    } else {
+        return -1;
     }
 
-    std::cout << "Message received : " << msg << "\n";
+    auto check_fn = this->functionMap.find(res.front());
+    if (check_fn != this->functionMap.end()) {
+        std::stringstream ss;
+        for (auto c = res.begin(); c != res.end(); ++c) {
+            c != res.begin() ? ss << " " << *c : ss << *c;
+        }
+        this->functionMap[res.front()](ss.str());
+    } else {
+        return -1; // Command not found among registered in functionMap (see fn initValidCommands)
+    }
+
+    // std::cout << "Message received : " << msg << "\n"; // TODO: Store in log with timestamp
 
     return 0;
 }
