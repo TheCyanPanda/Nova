@@ -90,6 +90,10 @@ void ioHandler::initValidCommands()
     this->functionMap["udp_start"] = [this](const std::string& v_cmd) {
         this->fnStartUdpStream(v_cmd);
     };
+    /* ------ Stop UDP Stream ------ */
+    this->functionMap["udp_stop"] = [this](const std::string& v_cmd) {
+        std::cout << "TODO: Implement this" << "\n"; // TODO <=
+    };
 }
 
 
@@ -138,7 +142,10 @@ void ioHandler::fnStartUdpStream(const std::string v_cmd)
 
     // TODO: Associate the server with a userIP/ID. Kill and delete the UDP socket after X minutes/hours etc
     // if there is no activity from the user. Require an interatcion "I am alive" etc every X minutes to keep the server alive.
-    this->cameraStreams.push_back(new Network::CameraStream(target_ip, target_port)); 
+    // TODO: Sanity check the IP and port provided by user
+    std::cout << "Starting UDP Server to target IP " << target_ip << " : " << target_port << "\n";
+    this->cameraStreams.push_back(new Network::CameraStream(target_ip, target_port));
+    this->cameraStreams.back()->startStream();
 }
 
 
