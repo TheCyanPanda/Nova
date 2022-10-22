@@ -5,7 +5,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-
+#include <sstream>
+#include <chrono>
 
                                             /* ---------- CONSTRUCTOR / DESTRUCTOR  ----------  */
 // Constructor
@@ -78,8 +79,8 @@ void ioHandler::initValidCommands()
 
     /* ------ Init cameraPosition ------ */
     // Function call init
-    this->functionMap["cam_move"] = [this](const std::string& v_cmd) {
-        this->fnMoveCamera(v_cmd);
+    this->functionMap["cam_move"] = [this](const std::vector<std::string>& argv) {
+        this->fnMoveCamera(argv);
     };
     // Init cam pos map
     this->cameraPositions["MID"] = cameraPosition::MID;
@@ -87,20 +88,20 @@ void ioHandler::initValidCommands()
     this->cameraPositions["MAX"] = cameraPosition::MAX;
 
     /* ------ Init UDP Stream ------ */
-    this->functionMap["udp_start"] = [this](const std::string& v_cmd) {
-        this->fnStartUdpStream(v_cmd);
+    this->functionMap["udp_start"] = [this](const std::vector<std::string>& argv) {
+        this->fnStartUdpStream(argv); // udp_start <ip> <port>
     };
     /* ------ Stop UDP Stream ------ */
-    this->functionMap["udp_stop"] = [this](const std::string& v_cmd) {
+    this->functionMap["udp_stop"] = [this](const std::vector<std::string>& argv) {
         std::cout << "TODO: Implement this" << "\n"; // TODO <=
     };
 }
 
 
-void ioHandler::fnMoveCamera(const std::string& v_cmd) const
+void ioHandler::fnMoveCamera(const std::vector<std::string>& argv) const
 {
     /* Usage: cam_move <MIN | MID | MAX > */
-    std::vector<std::string> argv = this->userInput2Vec(v_cmd, " ");
+    //std::vector<std::string> argv = this->userInput2Vec(v_cmd, " ");
 
     if (this->cameraPositions.find(argv.at(1)) == this->cameraPositions.end()) {
         std::cout << "Error: " << "Trying to move camera to invalid location: " << argv.at(1) << "\n"; // todo: Log this.
@@ -125,17 +126,17 @@ void ioHandler::fnMoveCamera(const std::string& v_cmd) const
     }
 }
 
-void ioHandler::fnStartUdpStream(const std::string v_cmd)
+
+void ioHandler::fnStartUdpStream(const std::vector<std::string>& argv)
 {
     /* Usage: udp_start <ip> <port> */
     //this->cameraStreams.push_back(new Network::CameraStream(target_ip, target_port));
     //this->cameraStream = new Network::CameraStream("192.168.99.12", "39009"); // Init with arbitrary address for now. TODO: Start the stream on demand with request from specific IP. TODO: Let port be an int instaed of std::str
     //this->cameraStream->startStream();
 
-    std::vector<std::string> argv = this->userInput2Vec(v_cmd, " ");
-
-    if (argv.size() != 3) {
+    if (argv.size() != 4) {
         std::cout << "Client attempted to run command 'start_udp' with invalid number of arguments: " << argv.size() << "\n"; // todo: save in log
+        return;
     }
     std::string target_ip = argv.at(1);
     std::string target_port = argv.at(2);
@@ -144,8 +145,13 @@ void ioHandler::fnStartUdpStream(const std::string v_cmd)
     // if there is no activity from the user. Require an interatcion "I am alive" etc every X minutes to keep the server alive.
     // TODO: Sanity check the IP and port provided by user
     std::cout << "Starting UDP Server to target IP " << target_ip << " : " << target_port << "\n";
+    this->cameraStreamThreads.push_back(this->getCameraStreamThread(target_ip, target_port));
+
+}
+
+std::thread ioHandler::getCameraStreamThread(const std::string& target_ip, const std::string& target_port) {
     this->cameraStreams.push_back(new Network::CameraStream(target_ip, target_port));
-    this->cameraStreams.back()->startStream();
+    return std::thread( [this] { this->cameraStreams.back()->startStream(true); } );
 }
 
 
@@ -156,26 +162,37 @@ void ioHandler::startTcpServer()
 
 int ioHandler::parseTcpMessage(const std::string& msg, const std::string& username)
 {
-
-    std::vector<std::string> res = Common::stringSplit(msg, " ");
-
-    // Validate sender as actual client and pop it from vector
-    if (algorithm::contains(res.front(), username)) {
-        res.erase(res.begin());
-        res.back() = boost::algorithm::erase_tail_copy(res.back(), 1); // Remove trailing new-line char from last element
-    } else {
-        return -1;
-    }
+    // input msg: IP:PORT:MSG
+    std::cout << "Received message:" << msg << "\n"; // todo: store in log
     // TODO: Require each command to pass a simple authentication step like: send(vcmfd9U@#nvcv2~!fd23g). Expect a returned hash to match from the client.
     // TODO: Check if user is registered. Let only registered users continue
 
-    auto check_fn = this->functionMap.find(res.front());
+    std::vector<std::string> argv = this->userInput2Vec(msg);
+    int ok = false;
+    for (auto s = argv.begin(); s != argv.end(); s++) {
+        if (algorithm::contains(argv.front(), username)) {
+            argv.erase(argv.begin()); // remove header : IP:PORT from msg
+            ok = true;
+        }
+    }
+    if (!ok) {
+        return -1;
+    }
+
+    //debug
+    for (auto c = argv.begin(); c != argv.end(); c++) {
+        std::cout << "#: " << *c << "\n";
+    }
+
+    argv.emplace_back(boost::algorithm::erase_last_copy(argv.back(), "\n"));
+
+    auto check_fn = this->functionMap.find(argv.front());
     if (check_fn != this->functionMap.end()) {
         std::stringstream ss;
-        for (auto c = res.begin(); c != res.end(); ++c) {
-            c != res.begin() ? ss << " " << *c : ss << *c;
+        for (auto c = argv.begin(); c != argv.end(); ++c) {
+            c != argv.begin() ? ss << " " << *c : ss << *c;
         }
-        this->functionMap[res.front()](ss.str());
+        this->functionMap[argv.front()](argv);
     } else {
         return -1; // Command not found among registered in functionMap (see fn initValidCommands)
     }

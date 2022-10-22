@@ -19,6 +19,7 @@ namespace Network {
       std::vector<unsigned char> send_buf;
       const int chunk_sz;
       unsigned char* image_buffer;
+      bool started;  // set to false when received stop signal
 
       Network::UDPServer* udpServer;
 
@@ -29,7 +30,7 @@ namespace Network {
       ~CameraStream();
 
       // Functions
-      void startStream();
+      void startStream(bool start);
 
       // Setters
 

@@ -4,7 +4,8 @@
 #include <iostream>
 #include <chrono>
 #include <map>
-#include <thread>
+//#include <thread>
+#include <boost/thread.hpp>
 
 using namespace boost;
 
@@ -32,8 +33,9 @@ namespace Network
 	// Functions
 
 	// TODO: Split this function into separate functions and classes!!
-	void CameraStream::startStream()
+	void CameraStream::startStream(bool start)
 	{
+		std::cout << "Starting stream..." << "\n";
 		// Create a buffer to hold the encoded image fragments
 		std::vector<unsigned char> buf(this->chunk_sz);
 
