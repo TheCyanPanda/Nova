@@ -18,7 +18,8 @@ class TcpClient:
     def close(self):
         self.server.close()
 
-    def send_cmd(self, msg: str, recv_bytes=1024):
+    def send_cmd(self, msg: str, recv_bytes=1024, end='\n'):
+        msg += end
         self.server.sendall(msg.encode('utf-8'))
         data = self.server.recv(recv_bytes)
         print('geh')
