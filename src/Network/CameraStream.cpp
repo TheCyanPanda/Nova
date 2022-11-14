@@ -16,6 +16,7 @@ namespace Network
 	CameraStream::CameraStream(const std::string& recv_addr, const std::string& port, const int& chunk_sz_)
 		: chunk_sz(chunk_sz_)
 	{
+		this->stream_stop = false;
 		this->cap = new CameraDevice("/dev/video0");
 		this->udpServer = new Network::UDPServer(recv_addr, port);
 		this->image_buffer = new unsigned char[this->chunk_sz];
@@ -42,7 +43,9 @@ namespace Network
 		// Main loop
 		while (1)
 		{
-
+			if (this->stream_stop) {
+				break;
+			}
 			this->out_frame = this->cap->getFrame();
 
 			if (this->out_frame.empty())

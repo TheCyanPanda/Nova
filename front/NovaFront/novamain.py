@@ -99,8 +99,11 @@ class CommandLineParser(cmd.Cmd, threading.Thread):
         cmd.Cmd.__init__(self)
         threading.Thread.__init__(self)
         self.webserver = flaskserver.WebServer()
+        self.nova_daemon = None
+        self.webserver_thread = None
         self.tcpclient = tcp_client.TcpClient(host='localhost', port=1234)
         self.history = collections.deque()
+        self.udp_port = 39009
 
     def _append_history(self, input_):
         @CmdWrap()
@@ -167,15 +170,18 @@ class CommandLineParser(cmd.Cmd, threading.Thread):
         self.cmdloop()
 
     def precmd(self, line):
+        self._append_history(line)
         if re.match(f'^:', line):
             try:
-                print(f"To be implemented. This was your cmd: {line}")  # todo <--
+                ret = shell_cmd(line.strip(':').split(' '))
+                if ret and hasattr(ret, 'stdout'):
+                    print(ret.stdout.decode("utf-8") )
             except subprocess.CalledProcessError:
                 pass
+            return
         return line
 
     def postcmd(self, stop: bool, line: str) -> bool:
-        self._append_history(line)
         return stop
 
     def onecmd(self, line):
@@ -220,6 +226,28 @@ class CommandLineParser(cmd.Cmd, threading.Thread):
             return self.help_default(args.doc)
 
     @CmdWrap()
+    def do_start_all(self, args: CmdWrap):
+        """
+        Syntax: start_all
+        Description: Start NovaDaemon, Webserver and UDP stream
+        """
+        if not args.argc == 1:
+            return self.help_default(args.doc)
+
+        # Start NovaDaemon
+        self.nova_daemon = subprocess.Popen('../../build/apps/NovaServer')
+        time.sleep(1)
+        self.tcpclient.connect()
+
+        # Start WebServer
+        self.webserver_thread = threading.Thread(self.webserver.start())
+        self.webserver_thread.start()
+
+        # Start UDP image stream
+        resp = self.tcpclient.send_cmd(f'udp_start localhost {self.udp_port}')
+        print(resp)
+
+    @CmdWrap()
     def do_daemon(self, args: CmdWrap):
         """
         Syntax: daemon [start <port> | stop | cmd <command>]
@@ -229,8 +257,7 @@ class CommandLineParser(cmd.Cmd, threading.Thread):
             return self.help_default(args.doc)
 
         if args.argv[0] == 'start':
-            process = subprocess.Popen('../../build/apps/NovaServer')
-            # todo: implement tcp_client connect to server and the other stuff
+            self.nova_daemon = subprocess.Popen('../../build/apps/NovaServer')
             time.sleep(1)
             self.tcpclient.connect()
         elif args.argv[0] == 'stop':
@@ -242,6 +269,13 @@ class CommandLineParser(cmd.Cmd, threading.Thread):
         elif args.argv[0] == 'cam_max':
             resp = self.tcpclient.send_cmd('cam_move MAX')
             print(resp)
+        elif args.argv[0] == 'udp_start':
+            resp = self.tcpclient.send_cmd(f'udp_start localhost {self.udp_port}')
+            print(resp)
+        elif args.argv[0] == 'udp_stop':
+            resp = self.tcpclient.send_cmd('udp_stop')
+            print(resp)
+            pass
         else:
             return self.help_default(args.doc)
 
@@ -255,12 +289,12 @@ class CommandLineParser(cmd.Cmd, threading.Thread):
             return self.help_default(args.doc)
 
         if args.argv[0] == 'start':
-            t1 = threading.Thread(self.webserver.start())
+            self.webserver_thread = threading.Thread(self.webserver.start())
         elif args.argv[0] == 'stop':
-            t1 = threading.Thread(self.webserver.shutdown())
+            self.webserver_thread = threading.Thread(self.webserver.shutdown())
         else:
             return self.help_web_server()
-        t1.start()
+        self.webserver_thread.start()
 
     """ Help functions """
 

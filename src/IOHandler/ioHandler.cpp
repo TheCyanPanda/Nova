@@ -93,7 +93,7 @@ void ioHandler::initValidCommands()
     };
     /* ------ Stop UDP Stream ------ */
     this->functionMap["udp_stop"] = [this](const std::vector<std::string>& argv) {
-        std::cout << "TODO: Implement this" << "\n"; // TODO <=
+        this->fnStopUdpStream(argv);
     };
 }
 
@@ -124,6 +124,17 @@ void ioHandler::fnMoveCamera(const std::vector<std::string>& argv) const
         default:
             std::cout << "WARNING: Invalid option..." << "\n";
     }
+}
+
+void ioHandler::fnStopUdpStream(const std::vector<std::string>& argv)
+{
+    // For now, just terminate all the streams
+    // todo: make cameraStreams into a map with (<cameraStream>, <cameraStreamThread>)
+    this->cameraStreams.back()->stream_stop = true;
+    for (auto t = this->cameraStreamThreads.begin(); t != this->cameraStreamThreads.end(); ++t) {
+        t->join();
+    }
+    this->cameraStreams.back()->stream_stop = false;
 }
 
 

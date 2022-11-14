@@ -24,6 +24,7 @@ namespace Network {
       Network::UDPServer* udpServer;
 
    public:
+      bool stream_stop;  // True if stream is to be stopped
 
       // Constructor / Destructor
       CameraStream(const std::string& recv_addr, const std::string& port, const int& chunk_sz_=1024);
